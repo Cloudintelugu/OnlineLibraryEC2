@@ -12,9 +12,9 @@ app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your_default_secret_key')  # Load from environment variable
 
 # MySQL configuration - use environment variables or default values
-db_host = 'localhost'
+db_host = 'ccitdb.crw2i8syumjl.ap-south-2.rds.amazonaws.com'
 db_user = 'root'
-db_password = 'Ujwal@1234'
+db_password = 'Admin-123'
 db_name = 'ccituserdb'
 
 # Initialize MySQL connection
@@ -49,7 +49,7 @@ def signup():
         image = request.files['image']
 
         # Check if the image is allowed and has a filename
-        if image and allowed_file(image.filename):
+       """ if image and allowed_file(image.filename):
             filename = secure_filename(image.filename)
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
@@ -67,6 +67,34 @@ def signup():
             )
             db.commit()
             cursor.close()
+        """
+            
+        if image and allowed_file(image.filename):
+            filename = secure_filename(image.filename)
+            image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+            # Upload image to S3
+            s3.upload_file(
+                os.path.join(app.config['UPLOAD_FOLDER'], filename),
+                s3_bucket,
+                filename,
+                ExtraArgs={'ACL': 'public-read'}
+            )
+
+            # Get the image URL from S3
+            image_url = f"https://{s3_bucket}.s3.{s3_region}.amazonaws.com/{filename}"
+
+            # Insert user data into RDS MySQL
+            cursor = db.cursor()
+            cursor.execute(
+                "INSERT INTO users (name, email, password, image_url) VALUES (%s, %s, %s, %s)",
+                (name, email, hashed_password, image_url)
+            )
+            db.commit()
+            cursor.close()
+
+            # Clean up the uploaded image file
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
             return redirect('/signin')
 
