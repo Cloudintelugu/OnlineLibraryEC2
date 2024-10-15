@@ -57,7 +57,8 @@ def signup():
         image = request.files['image']
 
         # Check if the image is allowed and has a filename
-        """ if image and allowed_file(image.filename):
+         
+        if image and allowed_file(image.filename):
             filename = secure_filename(image.filename)
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
@@ -75,6 +76,7 @@ def signup():
             )
             db.commit()
             cursor.close()
+        return redirect('/signin')
         """
             
         if image and allowed_file(image.filename):
@@ -105,7 +107,7 @@ def signup():
             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
             return redirect('/signin')
-
+        """
     return render_template('signup.html')
 
 @app.route('/signin', methods=['GET', 'POST'])
@@ -137,7 +139,15 @@ def welcome():
         return redirect(url_for('signin'))
 
     # Ensure the image URL is accessible
+    
     image_url = url_for('static', filename=session['image_url'])  # Serve the image from the static folder
+    
+    if 'https' in session['image_url']:
+        image_url = session['image_url']  # Use the image URL directly if it contains "https"
+    else:
+        image_url = url_for('static', filename=session['image_url'])  # Otherwise, use url_for
+
+    
     return render_template('welcome.html', username=session['username'], email=session['email'], image_url=image_url)
 
 @app.route('/logout')
@@ -152,4 +162,4 @@ if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
 
-    app.run(host='0.0.0.0', port=5000)  # Change to port 80 for HTTP access
+    app.run(host='0.0.0.0', port=80)  # Change to port 80 for HTTP access
