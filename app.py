@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template, redirect, session, url_for
 import pymysql
+import boto3
 import os
 import bcrypt
 from werkzeug.utils import secure_filename
@@ -12,10 +13,17 @@ app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your_default_secret_key')  # Load from environment variable
 
 # MySQL configuration - use environment variables or default values
-db_host = 'ccitdb.crw2i8syumjl.ap-south-2.rds.amazonaws.com'
+db_host = 'test'
 db_user = 'root'
 db_password = 'Admin-123'
 db_name = 'ccituserdb'
+s3_Key = 'test'
+s3_SecKey = 'test'
+s3_bucket = 'ccitaugbatch'
+s3_region = 'ap-south-1'
+
+# Initialize AWS S3 client
+s3 = boto3.client('s3', aws_access_key_id=s3_Key, aws_secret_access_key=s3_SecKey, region_name=s3_region)
 
 # Initialize MySQL connection
 db = pymysql.connect(host=db_host, user=db_user, password=db_password, database=db_name)
@@ -49,7 +57,7 @@ def signup():
         image = request.files['image']
 
         # Check if the image is allowed and has a filename
-       """ if image and allowed_file(image.filename):
+        """ if image and allowed_file(image.filename):
             filename = secure_filename(image.filename)
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
